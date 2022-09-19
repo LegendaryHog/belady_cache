@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/c/Users/kytej/OneDrive/Desktop/belady_cache/belady.cpp
+belady.h
+/mnt/c/Users/kytej/OneDrive/Desktop/belady_cache/belady.h
+
+/mnt/c/Users/kytej/OneDrive/Desktop/belady_cache/belady.h
+map
+-
+unordered_map
+-
+deque
+-
+iterator
+-
+vector
+-
+
