@@ -1,0 +1,6 @@
+bulid/
+*.o
+*.out
+*.txt
+!CMakeLists.txt
+
