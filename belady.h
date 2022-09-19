@@ -5,6 +5,7 @@
 #include <deque>
 #include <iterator>
 #include <vector>
+#include <iostream>
 
 namespace belady{
 
@@ -14,7 +15,7 @@ class belady_t
 {
     //for seek latest (lowest for cache) elem by O(1)
     std::unordered_map<KeyT, std::deque<size_t>> future;
-    //key type for map (cache) to keep sorted by rule: later == lower
+    //key type for map (cache) to keep sorted by rule: later == bigger
     struct KeyMap
     {
         size_t next_pos = 0;
@@ -40,17 +41,17 @@ class belady_t
         }
 
         /*
-         * overload operator less for map, rule: later meet == lower
+         * overload operator less for map, rule: later meet == bigger
          * complexity: O(1)
          */
         bool operator< (const KeyMap& key_map) const
         {
-            if (key_map.never)
+            if (never)
                 return false;
-            else if (never)
+            else if (key_map.never)
                 return true;
             else
-                return next_pos > key_map.next_pos;
+                return next_pos < key_map.next_pos;
         }
 
         /*
@@ -121,16 +122,35 @@ class belady_t
             update_future(key);
             if (hit == hash_map.end()) //if not found
             {
-                if (full())
-                    if (!need_ins(key))
-                        return false;
-                    else
-                        erase_last();
-                insert(key, slow_get_page(key));
+                if (need_ins(key))
+                {
+                    if (full())
+                        erase(std::prev(cache.end()));
+                    insert(key, slow_get_page(key));
+                }
                 return false;
             }
             replace_in_map (KeyMap(hit->first, future), hit->second);
             return true;
+        }
+
+        void dump()
+        {
+            std::cout << "DUMP:" << std::endl;
+            std::cout << "CAPCITY: " << capacity << std::endl;
+            std::cout << "SIZE: "<< cache.size() << std::endl;
+            std::cout << "CACHE:\n{" << std::endl;
+            for (auto elem: cache)
+            {
+                std::cout << "\tKEY: " << elem.second.key << std::endl;
+                std::cout << "\tNEXT MET: ";
+                if (elem.first.never)
+                    std::cout << "never";
+                else
+                    std::cout << elem.first.next_pos;
+                std::cout << std::endl;
+            }
+            std::cout << '}' << std::endl;
         }
     private:
         /*
@@ -140,21 +160,25 @@ class belady_t
         bool need_ins(const KeyT& key) const
         {
             KeyMap key_map_cnd (key, future);
+            if (key_map_cnd.never)
+                return false;
+            if (empty())
+                return true;
             KeyMap key_map_last = std::prev(cache.end())->first;
-            return key_map_last < key_map_cnd;
+            return key_map_cnd < key_map_last;
         }
         /*
-         * erase last element from cache("last" equal to "meet later")
+         * erase element by iterator from cache
          * complexity: O(1)  
          */ 
-        void erase_last()
+        void erase(MapIt itr)
         {
             //erase elem from hash_map
             //complexity: O(1)
-            hash_map.erase((std::prev(cache.end()))->second.key);
+            hash_map.erase(itr->second.key);
             //erase eelm from cache
             //complexity: O(1)
-            cache.erase(std::prev(cache.end()));
+            cache.erase(itr);
             size--;
         }
 
@@ -207,7 +231,17 @@ class belady_t
             //save itr for hash_map
             //complexity: O(logN)
             key_map.update(future);
-            MapIt itr_upd = cache.insert({key_map, {itr->second.page, itr->second.key}}).first;
+            //if this element will never meet again - erase
+            if (key_map.never)
+            {
+                erase(itr);
+                return;
+            }
+
+            auto pair_upd = cache.insert({key_map, {itr->second.page, itr->second.key}});
+            MapIt itr_upd = pair_upd.first;
+            if (pair_upd.second == false)
+                std::cout << std::endl << "!!!ALARM!!!" << std::endl;
 
             //erase old elem by iterator 
             //complexity: O(1)
