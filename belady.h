@@ -9,7 +9,7 @@
 namespace belady{
 
 using std::size_t;
-template<typename PageT, typename KeyT>
+template<typename PageT, typename KeyT = int>
 class belady_t
 {
     //for seek latest (lowest for cache) elem by O(1)
@@ -25,7 +25,7 @@ class belady_t
          * construct KeyMap by key
          * complexity: O(1)
          */
-        KeyMap(const KeyT& inkey): key{inkey}
+        KeyMap(const KeyT& inkey, const std::unordered_map<KeyT, std::deque<size_t>>& future): key{inkey}
         {
             //look in deque of key
             //complexity: O(1)
@@ -57,7 +57,7 @@ class belady_t
          * construct KeyMap by key
          * complexity: O(1)
          */
-        void update()
+        void update(const std::unordered_map<KeyT, std::deque<size_t>>& future)
         {
             //look in deque by key
             auto pair_ftr = future.find(key);
@@ -75,12 +75,12 @@ class belady_t
             }
         }
 
-        void rkey() const {return key;}
+        KeyT rkey() const {return key;}
     };
     //data type for map (cache)
     struct DataT
     {
-        PageT data;
+        PageT page;
         KeyT key;
     };
 
@@ -93,7 +93,7 @@ class belady_t
     size_t size = 0;
     size_t capacity;
 
-    //type of data for hash_map
+    //type of page for hash_map
     using MapIt = typename std::map<KeyMap, DataT>::iterator;
 
     //hash_map for seeking key by O(1)
@@ -105,7 +105,7 @@ class belady_t
             {
                 auto pair_deq = future.find(key_vec[i]);
                 if (pair_deq == future.end())
-                    future.emplace(key_vec[i], {i});
+                    future[key_vec[i]] = {i};
                 else
                     pair_deq->second.push_back(i);
             }
@@ -121,15 +121,15 @@ class belady_t
             update_future(key);
             if (hit == hash_map.end()) //if not found
             {
-                if (need_ins(key))
-                {
-                    if (full())
+                if (full())
+                    if (!need_ins(key))
+                        return false;
+                    else
                         erase_last();
-                    insert(key, slow_get_page(key));
-                }
+                insert(key, slow_get_page(key));
                 return false;
             }
-            replace_in_map (hit->first, hit->second);
+            replace_in_map (KeyMap(hit->first, future), hit->second);
             return true;
         }
     private:
@@ -139,7 +139,7 @@ class belady_t
          */
         bool need_ins(const KeyT& key) const
         {
-            KeyMap key_map_cnd (key);
+            KeyMap key_map_cnd (key, future);
             KeyMap key_map_last = std::prev(cache.end())->first;
             return key_map_last < key_map_cnd;
         }
@@ -151,7 +151,7 @@ class belady_t
         {
             //erase elem from hash_map
             //complexity: O(1)
-            hash_map.erase(std::prev(cache.end())->key);
+            hash_map.erase((std::prev(cache.end()))->second.key);
             //erase eelm from cache
             //complexity: O(1)
             cache.erase(std::prev(cache.end()));
@@ -173,10 +173,10 @@ class belady_t
 
             //pop meet index from deque
             //complexity: O(1)
-            pair_deq->second.pop_frot();
+            pair_deq->second.pop_front();
             //erase empty deque
             //complexity: O(1)
-            if (pair_deq.second.empty())
+            if (pair_deq->second.empty())
                 future.erase(key);
         }
 
@@ -188,10 +188,10 @@ class belady_t
         {
             //insert elem in key
             //complexity: O(logN)
-            auto pair_it = cache.insert({KeyMap(key), page});
+            auto pair_it = cache.insert({KeyMap(key, future), {page, key}});
             //insert iterator on elem in hash_map
             //complexity: O(1)
-            hash_map[key] = pair_it->first;
+            hash_map[key] = pair_it.first;
             size++;
         }
 
@@ -199,14 +199,15 @@ class belady_t
          * replace elements in map, because key_map became invalidtaed
          * complexity: O(logN)  
          */ 
-        void replace_in_map(const KeyMap key_map, MapIt itr)
+        void replace_in_map(KeyMap key_map, MapIt itr)
         {
             //update key_map 
             //insert in cache by key_map
-            //copy in new node data from iterator on node with old key_map
+            //copy in new node page from iterator on node with old key_map
             //save itr for hash_map
             //complexity: O(logN)
-            MapIt itr_upd = cache.insert(key_map.update(), {itr->data, itr->key})->first;
+            key_map.update(future);
+            MapIt itr_upd = cache.insert({key_map, {itr->second.page, itr->second.key}}).first;
 
             //erase old elem by iterator 
             //complexity: O(1)
