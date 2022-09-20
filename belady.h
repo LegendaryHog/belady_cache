@@ -241,7 +241,7 @@ class belady_t
             auto pair_upd = cache.insert({key_map, {itr->second.page, itr->second.key}});
             MapIt itr_upd = pair_upd.first;
             if (pair_upd.second == false)
-                std::cout << std::endl << "!!!ALARM!!!" << std::endl;
+                throw std::invalid_argument ("no insert");
 
             //erase old elem by iterator 
             //complexity: O(1)

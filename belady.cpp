@@ -23,18 +23,8 @@ int main()
     belady::belady_t<int> my_cache (c_sz, data);
 
     std::size_t hits = 0;
-    std::size_t ind = 4;
     for (auto x: data)
-    {
-        std::cout << std::endl << ind++ << ':' << std::endl;
-        std::cout << "KEY FOR LOOKUP: " << x << std::endl;
-        if(my_cache.lookup_update(x, slow_get_page) == true)
-        {
-            std::cout << "(!!!HIT!!!)" << std::endl;
-            hits++;
-        }
-        my_cache.dump();
-    }
+        hits += my_cache.lookup_update(x, slow_get_page);
 
     std::cout << hits << std::endl;
     return 0;
