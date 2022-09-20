@@ -170,6 +170,19 @@ class belady_t
             }
             std::cout << '}' << std::endl;
         }
+
+        void dump_ftr()
+        {
+            std::cout << "DUMP FTR: " << std::endl << "HASH_MAP:" << std::endl << '{' << std::endl;
+            for (auto pair_deq: future)
+            {
+                std::cout << "\tKEY: " << pair_deq.first << " MET: {";
+                for (auto el_deq: pair_deq.second)
+                    std::cout << el_deq << ' ';
+                std::cout << '}' << std::endl;
+            }
+            std::cout << '}';
+        }
     private:
         /*
          * return true if insertion of key is efficiently, else rturn false
@@ -180,8 +193,10 @@ class belady_t
             KeyMap key_map_cnd (key, future);
             if (key_map_cnd.never)
                 return false;
-            if (empty())
+
+            if (!full())
                 return true;
+                
             KeyMap key_map_last = std::prev(cache.end())->first;
             return key_map_cnd < key_map_last;
         }
@@ -245,10 +260,6 @@ class belady_t
         void replace_in_map(KeyMap key_map, MapIt itr)
         {
             //update key_map 
-            //insert in cache by key_map
-            //copy in new node page from iterator on node with old key_map
-            //save itr for hash_map
-            //complexity: O(logM)
             key_map.update(future);
             //if this element will never meet again - erase
             if (key_map.never)
@@ -256,7 +267,11 @@ class belady_t
                 erase(itr);
                 return;
             }
-
+            
+            //insert in cache by key_map
+            //copy in new node page from iterator on node with old key_map
+            //save itr for hash_map
+            //complexity: O(logM)
             auto pair_upd = cache.insert({key_map, {itr->second.page, itr->second.key}});
             MapIt itr_upd = pair_upd.first;
             if (pair_upd.second == false)
