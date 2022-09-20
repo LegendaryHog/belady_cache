@@ -100,6 +100,10 @@ class belady_t
     //hash_map for seeking key by O(1)
     std::unordered_map<KeyT, MapIt> hash_map;
     public:
+        /*
+         * constructor of cache: take sequence of requests and capacity
+         * complexity: O(N) (!!!now and later M - size of cache, N - number of requests!!!)
+         */
         belady_t (size_t cap, const std::vector<KeyT>& key_vec): capacity {cap}
         {
             for (size_t i = 0; i < key_vec.size(); i++)
@@ -115,6 +119,10 @@ class belady_t
         bool full() const {return (size == capacity);}
         bool empty() const {return (size == 0);}
 
+        /*
+         * general public function to check element in cache by key and update cache
+         * complexity: O(logM)
+         */
         template<typename FuncT> //FuncT - PageT slow_get_page(KeyT)
         bool lookup_update(KeyT key, FuncT slow_get_page)
         {
@@ -130,16 +138,15 @@ class belady_t
                     if (full())
                         //complexity: O(1)
                         erase(std::prev(cache.end()));
-                    //complexity: O(logN) 
+                    //complexity: O(logM) 
                     insert(key, slow_get_page(key));
                 }
                 return false;
             }
-            //complexity: O(logN)
+            //complexity: O(logM)
             replace_in_map (KeyMap(hit->first, future), hit->second);
             return true;
         }
-
 
         /*
          * dump of cache for debug
@@ -154,7 +161,7 @@ class belady_t
             for (auto elem: cache)
             {
                 std::cout << "\tKEY: " << elem.second.key << std::endl;
-                std::cout << "\tNEXT MET: ";
+                std::cout << "\tMEXT MET: ";
                 if (elem.first.never)
                     std::cout << "never";
                 else
@@ -178,6 +185,7 @@ class belady_t
             KeyMap key_map_last = std::prev(cache.end())->first;
             return key_map_cnd < key_map_last;
         }
+
         /*
          * erase element by iterator from cache
          * complexity: O(1)  
@@ -217,12 +225,12 @@ class belady_t
 
         /*
          * insert new element in cache
-         * complexity: O(logN)  
+         * complexity: O(logM)  
          */ 
         void insert(const KeyT& key, const PageT& page)
         {
             //insert elem in key
-            //complexity: O(logN)
+            //complexity: O(logM)
             auto pair_it = cache.insert({KeyMap(key, future), {page, key}});
             //insert iterator on elem in hash_map
             //complexity: O(1)
@@ -232,7 +240,7 @@ class belady_t
 
         /*
          * replace elements in map, because key_map became invalidtaed
-         * complexity: O(logN)  
+         * complexity: O(logM)  
          */ 
         void replace_in_map(KeyMap key_map, MapIt itr)
         {
@@ -240,7 +248,7 @@ class belady_t
             //insert in cache by key_map
             //copy in new node page from iterator on node with old key_map
             //save itr for hash_map
-            //complexity: O(logN)
+            //complexity: O(logM)
             key_map.update(future);
             //if this element will never meet again - erase
             if (key_map.never)
