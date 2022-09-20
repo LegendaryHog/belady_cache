@@ -118,22 +118,33 @@ class belady_t
         template<typename FuncT> //FuncT - PageT slow_get_page(KeyT)
         bool lookup_update(KeyT key, FuncT slow_get_page)
         {
+            //complexity: O(1)
             auto hit = hash_map.find(key);
+            //complexity: O(1)
             update_future(key);
             if (hit == hash_map.end()) //if not found
             {
+                //check inside if complexity: O(1)
                 if (need_ins(key))
                 {
                     if (full())
+                        //complexity: O(1)
                         erase(std::prev(cache.end()));
+                    //complexity: O(logN) 
                     insert(key, slow_get_page(key));
                 }
                 return false;
             }
+            //complexity: O(logN)
             replace_in_map (KeyMap(hit->first, future), hit->second);
             return true;
         }
 
+
+        /*
+         * dump of cache for debug
+         * complexity: no matter
+         */
         void dump()
         {
             std::cout << "DUMP:" << std::endl;
