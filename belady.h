@@ -79,11 +79,7 @@ class belady_t
         KeyT rkey() const {return key;}
     };
     //data type for map (cache)
-    struct DataT
-    {
-        PageT page;
-        KeyT key;
-    };
+    using DataT = typename std::pair<PageT, KeyT>;
 
     //general conteiner
     std::map<KeyMap, DataT> cache;
@@ -209,7 +205,7 @@ class belady_t
         {
             //erase elem from hash_map
             //complexity: O(1)
-            hash_map.erase(itr->second.key);
+            hash_map.erase(itr->second.second /*key*/);
             //erase eelm from cache
             //complexity: O(1)
             cache.erase(itr);
@@ -272,7 +268,7 @@ class belady_t
             //copy in new node page from iterator on node with old key_map
             //save itr for hash_map
             //complexity: O(logM)
-            auto pair_upd = cache.insert({key_map, {itr->second.page, itr->second.key}});
+            auto pair_upd = cache.insert({key_map, itr->second});
             MapIt itr_upd = pair_upd.first;
             if (pair_upd.second == false)
                 throw std::invalid_argument ("no insert");
