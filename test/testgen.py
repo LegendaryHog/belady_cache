@@ -18,7 +18,7 @@ class arr_int:
 def generate_test(quantity_of_keys: int):
     keys_arr: arr_int = arr_int(quantity_of_keys)
     for i in range(keys_arr.size):
-        keys_arr.arr[i] = random.randint(1, max(5, int(quantity_of_keys/8)))
+        keys_arr.arr[i] = random.randint(1, max(5, int(quantity_of_keys/2)))
     return keys_arr
 
 #for simplification data an key is the same
