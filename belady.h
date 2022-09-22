@@ -1,5 +1,5 @@
 #pragma once
-#define DEBUG
+
 #include <map>
 #include <unordered_map>
 #include <deque>

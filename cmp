@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+while getopts b:o: run_file
+do
+    case ${run_file} in 
+        b) belady=${OPTARG};;
+        o) other=${OPTARG};;
+    esac
+done
+
+for i in $(seq 5 1 $#)
+do
+    echo "$belady hits: "
+    time ./$belady < $5
+    echo "$other hits: "
+    time ./$other < $5
+    echo ''
+    shift
+done   
