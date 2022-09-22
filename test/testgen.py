@@ -53,10 +53,11 @@ class _cache_:
                 return ret
         return ret
 
-
     def need_ins(self, key_ins: int) ->bool:
         hit = self.look_in_future(key_ins)
-        if len(self.cache) == 0 & hit != len(self.future):
+        if hit == len(self.future):
+            return False
+        if len(self.cache) != self.size:
             return True
         for i in range(len(self.cache)):
             hit_i = self.look_in_future(self.cache[i])
@@ -130,13 +131,15 @@ def main():
         path += '/'
     f_test: TextIOWrapper = open(path + file_name_test, 'w')
 
-    print_in_file_test(f_test, keys_arr, max(int(quantity_of_keys/32), 4))
+    cache_cap: int = int(sys.argv[3])
+
+    print_in_file_test(f_test, keys_arr, cache_cap)
     f_test.close()
 
-    if len(sys.argv) <= 3:
+    if len(sys.argv) <= 4:
         file_name_answ: str = 'answ_' + file_name_test
         f_answ: TextIOWrapper = open(path + file_name_answ, 'w')
-        cache, hits = generate_answer(keys_arr, max(int(quantity_of_keys/32), 4))
+        cache, hits = generate_answer(keys_arr, cache_cap)
         print_in_file_answ(f_answ, cache, hits)
         f_answ.close()
 

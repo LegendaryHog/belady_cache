@@ -8,6 +8,16 @@ do
     esac
 done
 
+if [ "$#" == "4" ]
+then
+    echo "$belady hits: "
+    time ./$belady
+    echo "$other hits: "
+    time ./$other
+    echo ''
+    exit 0
+fi
+
 for i in $(seq 5 1 $#)
 do
     echo "$belady hits: "
